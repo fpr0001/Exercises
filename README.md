@@ -1,0 +1,3 @@
+# Exercises
+
+Repo to keep track of my experimentations with problems from services like Coursera, Codility, HackerHank...
