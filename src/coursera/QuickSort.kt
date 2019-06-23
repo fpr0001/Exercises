@@ -1,5 +1,6 @@
 package coursera
 
+// Count the comparisons made by each recursive call
 var count = 0
 
 fun main() {
@@ -76,7 +77,8 @@ fun IntArray.swap(firstIndex: Int, lastIndex: Int) {
 }
 
 /**
- * Chooses pivot and return its index
+ * Chooses pivot and return its index. You can also use just intRange.first or intRange.last as other
+ * ways of choosing the pivot
  */
 fun IntArray.getPivotIndex(intRange: IntRange): Int {
 
