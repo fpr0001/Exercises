@@ -1,9 +1,14 @@
 package coursera
 
+var count = 0
+
 fun main() {
-    val intArray = intArrayOf(3, 8, 2, 5, 1, 4, 7, 6)
+//    val intArray = intArrayOf(3, 8, 2, 5, 1, 4, 7, 6)
+    val intArray = getIntArrayFromFile("QuickSort.txt")
+    count = 0
     intArray.quickSort()
     intArray.map { print("$it, ") }
+    println("\nTotal count: $count")
 }
 
 fun IntArray.quickSort(intRange: IntRange = 0 until size) {
@@ -11,6 +16,8 @@ fun IntArray.quickSort(intRange: IntRange = 0 until size) {
     if (intRange.last - intRange.first == 0) { //array is sorted
         return
     }
+
+    count += intRange.last - intRange.first
 
     val pivotIndex = getPivotIndex(intRange)
 
@@ -52,7 +59,7 @@ fun IntArray.partitionArray(pi: Int, intRange: IntRange): Pair<IntRange, IntRang
 
     val intRage1: IntRange
     intRage1 = if (intRange.first == i - 1) { //pivot is in the first place
-        IntRange(i, intRange.last)
+        IntRange(0,0)
     } else {
         IntRange(intRange.first, i - 2)
     }
