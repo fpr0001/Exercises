@@ -1,21 +1,12 @@
 package coursera
 
-import java.io.File
-
 
 fun main() {
-    val b = findNumberOfInversions(getIntArrayFromFile())
+    val b = findNumberOfInversions(getIntArrayFromFile("arrayInversions.txt"))
     print("Sorted array: ")
     b.first.map { print("$it, ") }
     println()
     println("Number of inversions: ${b.second}")
-}
-
-fun getIntArrayFromFile(): IntArray {
-    val file = File("/Users/fpr0001/IdeaProjects/coursera/src/arrayInversions.txt")
-    return file.useLines { sequence ->
-        sequence.toList().map { it.toInt() }.toIntArray()
-    }
 }
 
 fun findNumberOfInversions(array: IntArray, inversionCount: String = "0"): Pair<IntArray, String> {
