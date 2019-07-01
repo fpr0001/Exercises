@@ -1,53 +1,93 @@
 package coursera
 
 import java.io.File
-import kotlin.math.max
+import java.lang.RuntimeException
 import kotlin.random.Random
 import kotlin.collections.*
+import kotlin.math.ceil
+import kotlin.math.ln
+import kotlin.math.pow
 
 fun main() {
 
-//    val graph = buildGraphMatrix(returnMatrixFromFile())
-
-    val line1 = mutableListOf(0,1,2,3,4,5,6)
-    val line2 = mutableListOf(1,0,1,1,0,0,0)
-    val line3 = mutableListOf(2,0,0,1,0,0,0)
-    val line4 = mutableListOf(3,0,0,0,1,0,0)
-    val line5 = mutableListOf(4,0,0,0,0,1,1)
-    val line6 = mutableListOf(5,0,0,0,0,0,1)
-    val line7 = mutableListOf(6,0,0,0,0,0,0)
-
-    val graph = mutableListOf(line1,line2,line3,line4,line5,line6,line7)
-    graph.print()
-    val minCut = findMinCut(graph)
-    println(minCut)
+    val matrixFromFile = returnMatrixFromFile("kargerMinCut.txt")
+    printMinCut(matrixFromFile)
 
 }
 
+private fun findMinCut(matrix: MutableList<MutableList<Int>>): Int {
 
-private fun buildGraphMatrix(matrixFromFile: Array<IntArray>): MutableList<MutableList<Int>> {
-    return MutableList(matrixFromFile.size + 1) { index ->
-        if (index == 0) {
-            MutableList(matrixFromFile.size + 1) { ind -> ind }
-        } else {
-            MutableList(matrixFromFile.size + 1) { subIndex ->
-                val vertices = matrixFromFile[index - 1]
-                if (subIndex == 0) {
+    if (matrix.size == 2) {
+        return matrix[0].size - 1
+    }
+
+    val vertices = matrix[Random.nextInt(0, matrix.size)]
+    val randomInt = Random.nextInt(1, vertices.size)
+    val value = vertices[randomInt]
+
+    val verticesToBeGone = matrix.find { list -> list.first() == value }
+    if (verticesToBeGone == null) {
+        throw RuntimeException("Something went wrong")
+    } else {
+        verticesToBeGone.removeAll { itm -> itm == vertices.first() }
+        verticesToBeGone.removeAt(0)
+        vertices.addAll(verticesToBeGone)
+        matrix.remove(verticesToBeGone)
+    }
+
+    vertices.removeAll { it == value }
+
+    matrix.forEach { vrtcs ->
+        if (vrtcs != vertices) {
+            vrtcs.replaceAll { itm ->
+                if (itm == value) {
                     vertices[0]
                 } else {
-                    if (vertices.drop(1).contains(subIndex)) {
-                        1
-                    } else {
-                        0
-                    }
+                    itm
                 }
             }
         }
     }
+
+    return findMinCut(matrix)
 }
 
-private fun returnMatrixFromFile(): Array<IntArray> {
-    val fileName = "kargerMinCut.txt"
+private fun printMinCut(originalMatrix: MutableList<MutableList<Int>>) {
+
+    val response = IntArray(getNumberOfTimesToRunFindMinCutAlgorithm(originalMatrix.size))
+    for (i in 0 until response.size) {
+        val minCutTemp = findMinCut(originalMatrix.getCopy())
+        println(minCutTemp)
+        response[i] = minCutTemp
+    }
+
+    println("\n Mincut = ${response.min()}")
+}
+
+fun MutableList<MutableList<Int>>.getCopy(): MutableList<MutableList<Int>> {
+    return MutableList(size) { index ->
+        val tmp = get(index).toMutableList()
+        MutableList(tmp.size) { i -> tmp[i] }
+    }
+}
+
+/**
+ * Because the algorithm is probabilistic, it has to be run multiple times to get an accurate result
+ */
+private fun getNumberOfTimesToRunFindMinCutAlgorithm(graphSize: Int): Int {
+    val response = ceil(ln(graphSize.toDouble()) * (graphSize.toDouble().pow(2)) * 2).toInt()
+    println("Number of times to run the algorithm: $response")
+    return response
+}
+
+/**
+ *
+ * @param fileName the file name located in the same directory as this file. To use the kargerTestFiles, append
+ * the suffix 'kargerTestFiles/' to the name of the file before passing to this function
+ *
+ * @param delimeter when using the kargerTestFiles, use the following delimeter ' '
+ */
+private fun returnMatrixFromFile(fileName: String, delimeter: String = "\t"): MutableList<MutableList<Int>> {
 
     val file = File("/Users/fpr0001/IdeaProjects/Exercises/src/coursera/$fileName")
     return file.useLines { sequence ->
@@ -55,7 +95,7 @@ private fun returnMatrixFromFile(): Array<IntArray> {
                 .toList()
                 .map {
                     it
-                            .split("\t")
+                            .split(delimeter)
                             .mapNotNull { numb ->
                                 try {
                                     numb.toInt()
@@ -63,93 +103,33 @@ private fun returnMatrixFromFile(): Array<IntArray> {
                                     null
                                 }
                             }
-                            .toIntArray()
-                }.toTypedArray()
+                            .toMutableList()
+                }.toMutableList()
     }
 }
 
+/**
+ * To print the matrix
+ */
 fun MutableList<MutableList<Int>>.print() {
-    println("\n")
-    forEach { list ->
-        list.forEach { value -> print("$value ") }
+
+    fun getSpaces(count: Int): String {
+        val response = StringBuilder()
+        for (i in 0..count) {
+            response.append(" ")
+        }
+        return response.toString()
+    }
+
+    println("\n\n")
+    forEachIndexed { i, list ->
+        list.forEachIndexed { index, value ->
+            print(when {
+                i == 0 -> "$value${getSpaces(4 - index.toString().length)}"
+                index == 0 -> "$value${getSpaces(4 - i.toString().length)}"
+                else -> "$value${getSpaces(4 - 1)}"
+            })
+        }
         println()
     }
-}
-
-fun findMinCut(graph: MutableList<MutableList<Int>>): Int {
-
-    if (graph.size == 3) {
-        return graph[1][2]
-    }
-
-    val randomIndex1 = Random.nextInt(1, graph.size)
-    var randomIndex2 = randomIndex1
-
-    while (randomIndex2 == randomIndex1) {
-        randomIndex2 = Random.nextInt(1, graph.size)
-    }
-
-    val maxIndex = max(randomIndex1, randomIndex2)
-    val minIndex = if (maxIndex == randomIndex1) randomIndex2 else randomIndex1
-
-    for (i in 1 until graph.size) {
-        if (i == minIndex || i == maxIndex) {
-            continue
-        }
-        graph[i][minIndex] += graph[i][maxIndex]
-        if (i > minIndex) {
-            graph[minIndex][i] += graph[i][minIndex]
-            graph[i][minIndex] = 0
-        }
-    }
-    for (i in minIndex + 1 until graph.size) {
-        graph[minIndex][i] += graph[maxIndex][i]
-    }
-
-    graph.removeAt(maxIndex)
-    graph.forEach { line -> line.removeAt(maxIndex) }
-    graph.print()
-
-    return findMinCut(graph)
-
-
-//    val newGraph = Array(graph.size - 1) { IntArray(graph.size - 1) }
-//
-//    //TODO merging vertixColumn into vertixRow
-//
-//    var hasFoundCeasingRow = false
-//    for (i in graph.indices) {
-//        val rowId = graph[i][0]
-//        if (rowId == vertixColumn) {
-//            hasFoundCeasingRow = true
-//        }
-//        var hasFoundCeasingColumn = false
-//        for (j in graph[i].indices) {
-//            val columnId = graph[0][j]
-//            if (columnId == vertixColumn) {
-//                hasFoundCeasingColumn = true
-//            }
-//            if (i == 0) { //if it is header
-//                newGraph[0][if (hasFoundCeasingColumn) j - 1 else j] = columnId
-//            } else if (j <= i) {
-//                newGraph[i][j] = 0
-//            } else { //if j > i
-//                newGraph[i][j] = graph[i][j]
-//
-//
-//                if (columnId == vertixColumn) {
-//                    if (rowId == vertixRow) {
-//                        //TODO arestas vão sumir
-//                    } else {
-//                        newGraph[if (hasFoundCeasingRow) i - 1 else i][if (hasFoundCeasingColumn) j - 1 else j] = graph[i][j] + newGraph[if (hasFoundCeasingRow) i - 1 else i][vertixRowIndex]
-//                    }
-//                } else {
-//                    newGraph[if (hasFoundCeasingRow) i - 1 else i][if (hasFoundCeasingColumn) j - 1 else j] = graph[i][j]
-//                }
-//            }
-//        }
-//    }
-
-
-//    return 0
 }
